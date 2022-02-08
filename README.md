@@ -83,7 +83,7 @@ For instance, let us set the value of the pre-exported gpio 4
 Now you can read the value of your gpio 
 
 ```
-# cat /sys/class/gpio/value
+# cat /sys/class/gpio/gpio4/value
 1
 ```
 
@@ -92,6 +92,6 @@ If we set it to zero, it will be immediately reflected in the guest system
 (gpio)> set 4 0
 ```
 ```
-# cat /sys/class/gpio/value
+# cat /sys/class/gpio/gpio4/value
 0
 ```
