@@ -61,9 +61,10 @@ If you close the raspberry pi you can reload the socket using the command
 First of all, you need to export GPIOs in your guest Linux.
 In a shell on your raspberry pi do:
 ```
-$ sudo su -
-# echo 4 >/sys/class/gpio/export
-# echo in >/sys/class/gpio//gpio4/direction
+# sudo is not needed anymore in modern versions of RaspiOS
+#  (user pi is member of group gpio...)
+$ echo 4 >/sys/class/gpio/export
+$ echo in >/sys/class/gpio//gpio4/direction
 ```
 
 The main commands in the `qemu-rpi-gpio` application are:
