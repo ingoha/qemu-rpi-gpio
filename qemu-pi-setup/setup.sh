@@ -54,7 +54,8 @@ resize_img() {
 	qemu-img resize -f raw "$IMGNAME" "$SIZE"
 }
 
-cd "$HOME"
+#why???
+#cd "$HOME"
 
 setup_dependencies
 IMGNAME="$(download_pi_os "$TARGET")"
