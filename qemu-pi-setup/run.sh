@@ -66,7 +66,7 @@ SERIAL="$SERIAL -serial stdio"
 "$QEMU"                                                   \
 	-curses                                           \
 	$SERIAL                                           \
-	-M       raspi3                                   \
+	-M       raspi3b                                   \
 	-dtb     "$ROOTFS/bcm2710-rpi-3-b-plus.dtb"       \
 	-kernel  "$ROOTFS/kernel8.img"                    \
 	-append  "$BOOTPARAMS"                            \
