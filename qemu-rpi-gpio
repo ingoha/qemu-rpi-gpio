@@ -2,7 +2,7 @@
 import re
 import os
 import sys
-import pexpect
+import socket
 
 SOCK_PATH="/tmp/tmp-gpio.sock"
 GPIO_RANGE=[0x3f200000, 0x3f200fff]
@@ -12,8 +12,8 @@ GPIO_SET_OFFSET=0x1c
 GPIO_RESET_OFFSET=0x28
 GPIO_READ_OFFSET=0x34
 
+# cf. https://github.com/xqemu/xqemu/blob/master/python/qemu/qtest.py
 class VGPIOManager(object):
-    fd = None
     def __init__(self, spath=SOCK_PATH):
         self.load(spath)
 
@@ -21,7 +21,13 @@ class VGPIOManager(object):
         if os.path.exists(SOCK_PATH):
             os.unlink(SOCK_PATH)
 
-        self.fd = pexpect.spawn("socat - UNIX-LISTEN:{}".format(SOCK_PATH))
+        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._sock.bind(SOCK_PATH)
+        self._sock.listen(1)
+        conn, addr = self._sock.accept()
+        print("QEMU connected: {}".format(addr))
+        self._sock = conn
+        self._sockfile = self._sock.makefile()
 
     def validate_address(self, address):
         if address < GPIO_RANGE[0] or address > GPIO_RANGE[1]:
@@ -29,32 +35,25 @@ class VGPIOManager(object):
         return True
 
     def writel(self, address, value):
-        self._sendline('writel 0x{:x} 0x{:x}'.format(address, value))
-        return self._read()
+        self._sock.sendall(('writel 0x{:x} 0x{:x}\n'.format(address, value)).encode('utf-8'))
+        return self._sockfile.readline()
 
     def readl(self, address):
-        self._sendline('readl 0x{:x}'.format(address))
-        return self._read()
+        self._sock.sendall(('readl 0x{:x}\n'.format(address)).encode('utf-8'))
+        return self._sockfile.readline()
 
     def read(self, address, size):
-        self._sendline('read 0x{:x} 0x{:x}'.format(address, size))
-        return self._read()
-
-    def _sendline(self, s):
-        return self.fd.sendline(s)
-
-    def _read(self):
-        # Cancel echo
-        self.fd.readline()
-        return self.fd.readline()
-
+        self._sock.sendall(('read 0x{:x} 0x{:x}\n'.format(address, size)).encode('utf-8'))
+        return self._sockfile.readline()
+    
     def read_entire_gpio_area(self):
         v = self.read(GPIO_RANGE[0], 0x1000)
         return v
 
 
     def close(self):
-        self.fd.close()
+        self._sock.close()
+        self._sockfile.close()
 
     def help(self):
         s  = "[ ] Virtual GPIO manager\n"
